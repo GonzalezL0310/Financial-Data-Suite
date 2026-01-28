@@ -1,0 +1,17 @@
+# Data Analysis 
+pandas
+numpy
+matplotlib
+
+
+# Database & Engineering 
+sqlalchemy
+
+# API & Networking 
+requests
+python-dotenv
+yfinance
+
+# Testing
+pytest
+

@@ -1,17 +1,16 @@
-# Data Analysis 
+# Data Analysis & Visualization
 pandas
 numpy
 matplotlib
 
-
-# Database & Engineering 
+# Database & Engineering
 sqlalchemy
-
-# API & Networking 
-requests
 python-dotenv
-yfinance
+
+# API & Backend (Project 3)
+requests
+fastapi
+uvicorn
 
 # Testing
 pytest
-

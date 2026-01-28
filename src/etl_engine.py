@@ -28,13 +28,14 @@ def run_etl():
         # Enhanced Error Diagnosis
         if not raw_data or "Time Series (Daily)" not in raw_data:
             # Captures specific API messages (e.g., rate limit notes or invalid symbols)
-            error_reason = "Unknown error"
-            if raw_data:
-                error_reason = raw_data.get("Note") or raw_data.get("Error Message") or "Data key missing"
+            error_reason = raw_data.get("Note") or raw_data.get("Error Message") if raw_data else "Unknown error"
             
-            print(f"Failed to fetch data for {asset.ticker_symbol}: {error_reason}")
-            continue
+            print(f"Skipping {asset.ticker_symbol}: {error_reason}")
             
+            if raw_data and "Note" in raw_data:
+                print("Rate limit reached. Safety cooldown of 15s...")
+                time.sleep(15)
+        
         time_series = raw_data["Time Series (Daily)"]
         
         # 3. Load: Save new records

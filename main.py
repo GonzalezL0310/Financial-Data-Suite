@@ -1,20 +1,46 @@
-from src.database import get_session, Asset
+import os
+from src.database import init_db
 from src.etl_engine import run_etl
+from src.analytics import load_data_from_db, calculate_metrics
+from src.visualizer import plot_metrics
+from src.config_loader import sync_assets_from_config
 
-def initialize_demo_assets():
-    """Initializes the database with some tickers if empty."""
-    session = get_session()
-    if session.query(Asset).count() == 0:
-        demo_assets = [
-            Asset(ticker_symbol="AAPL", asset_name="Apple Inc."),
-            Asset(ticker_symbol="MSFT", asset_name="Microsoft Corp.")
-        ]
-        session.add_all(demo_assets)
-        session.commit()
-    session.close()
+def check_env_file():
+    """Validates that the .env file exists and contains a real key."""
+    api_key = os.getenv("ALPHA_VANTAGE_API_KEY")
+    if not api_key or api_key == "your_key_here":
+        print("\n" + "!"*50)
+        print("ERROR: Invalid API Key in .env file.")
+        print("!"*50 + "\n")
+        return False
+    return True
+
+def analyze_and_plot(ticker: str):
+    """Handles analysis and visualization for a single ticker."""
+    print(f"\n>>> Analyzing: {ticker}")
+    df = load_data_from_db(ticker)
+    if df is not None:
+        df_metrics = calculate_metrics(df)
+        plot_metrics(df_metrics, ticker, 'close', 'sma_short', 'sma_long')
+    else:
+        print(f"Warning: No data for {ticker} found in database. Run ETL first.")
 
 if __name__ == "__main__":
-    print("--- Starting Market Data Pipeline ---")
-    initialize_demo_assets()
-    run_etl()
-    print("--- Pipeline Execution Finished ---")
+    # 1. System Setup
+    init_db()
+    
+    # 2. Sync DB with Tickers Config File
+    print("--- Phase 0: Syncing Configuration ---")
+    active_tickers = sync_assets_from_config("tickers.txt")
+    
+    if check_env_file() and active_tickers:
+        # 3. Global Sync (Project 2 logic)
+        print("\n--- Phase 1: Global Data Synchronization ---")
+        run_etl()
+        
+        # 4. Quantitative Analysis (Project 1 logic)
+        print("\n--- Phase 2: Quantitative Analysis ---")
+        for t in active_tickers:
+            analyze_and_plot(t)
+    
+    print("\n--- All operations completed ---")

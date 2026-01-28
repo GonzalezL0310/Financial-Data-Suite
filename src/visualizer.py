@@ -1,9 +1,4 @@
-"""
-Visualization Module (visualizer.py)
-
-Responsible for creating and saving charts using Matplotlib.
-"""
-
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -16,33 +11,33 @@ def plot_metrics(
 ) -> None:
     """
     Plots close price and Simple Moving Averages (SMA).
+    Saves the output in a dedicated 'metrics' folder.
     """
     if data is None or data.empty:
-        print("Error: No data provided for plotting.")
+        print(f"Error: No data provided for {ticker}.")
         return
 
-    required_columns = [price_col, short_sma_col, long_sma_col]
-    missing_columns = [col for col in required_columns if col not in data.columns]
-
-    if missing_columns:
-        print(f"Plotting error: Missing columns: {missing_columns}")
-        return
-
-    filename = f"{ticker}_metrics_plot.png"
+    # Encapsulated folder logic: keeps the function signature intact
+    output_dir = "metrics"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    filename = os.path.join(output_dir, f"{ticker}_metrics_plot.png")
 
     try:
-        plt.figure(figsize=(14, 7))
-        plt.plot(data.index, data[price_col], label='Close Price', color='blue', alpha=0.7)
-        plt.plot(data.index, data[short_sma_col], label=short_sma_col, color='orange', linestyle='--')
-        plt.plot(data.index, data[long_sma_col], label=long_sma_col, color='red', linestyle='--')
+        plt.figure(figsize=(12, 6))
+        plt.plot(data.index, data[price_col], label='Close Price', alpha=0.8)
+        plt.plot(data.index, data[short_sma_col], label=f'SMA {short_sma_col}')
+        plt.plot(data.index, data[long_sma_col], label=f'SMA {long_sma_col}')
 
-        plt.title(f'Close Price and Moving Averages for {ticker}', fontsize=16)
-        plt.xlabel('Date', fontsize=12)
-        plt.ylabel('Price (USD)', fontsize=12)
+        plt.title(f"Market Analysis: {ticker}")
+        plt.xlabel("Date")
+        plt.ylabel("Price")
         plt.legend()
-        plt.grid(True)
+        plt.grid(True, linestyle='--', alpha=0.6)
+        
         plt.savefig(filename)
         plt.close()
         print(f"Chart successfully saved as '{filename}'.")
     except Exception as e:
-        print(f"An unexpected error occurred while saving the chart: {e}")
+        print(f"An unexpected error occurred while saving the chart for {ticker}: {e}")

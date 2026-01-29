@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
+from .config_loader import settings
 
-def run_crossover_strategy(df: pd.DataFrame, short_window: int = 50, long_window: int = 200):
+def run_crossover_strategy(df: pd.DataFrame, short_window=settings['strategies']['default_short_window'],long_window=settings['strategies']['default_long_window']):
     """
     Calcula el rendimiento de una estrategia de cruce de medias.
     """

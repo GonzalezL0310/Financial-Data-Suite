@@ -1,0 +1,41 @@
+# Configuración Global
+system:
+  database_name: "market_data.db"
+  data_directory: "data"
+  tickers_file: "tickers.txt"
+
+# Motor de Extracción (ETL)
+etl:
+  api_cooldown_seconds: 15
+  output_size: "compact"  # Opciones: 'compact' o 'full'
+
+# Análisis Técnico
+analytics:
+  sma_short: 30
+  sma_long: 100
+  rsi_period: 14
+  bollinger_period: 20
+  bollinger_std: 2
+  volatility_window: 30
+
+risk_management:
+  var_confidence_level: 0.95
+  var_time_horizon: 1       # Días
+  monte_carlo_simulations: 1000
+  monte_carlo_days: 30
+
+# Graficador (Visualizer)
+visualizer:
+  output_dir: "metrics"
+  figure_size: [12, 6]
+  line_alpha: 0.8
+
+# Estrategias (Backtester)
+strategies:
+  default_short_window: 50
+  default_long_window: 200
+
+# Servidor API
+api:
+  host: "127.0.0.1"
+  port: 8000

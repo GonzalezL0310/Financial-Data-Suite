@@ -1,11 +1,12 @@
 import os
 from sqlalchemy import create_engine, Column, Integer, String, Float, Date, ForeignKey
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from .config_loader import settings
 
 # Get the absolute path of the project root
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-DATABASE_URL = f"sqlite:///{os.path.join(DATA_DIR, 'market_data.db')}"
+DATA_DIR = os.path.join(BASE_DIR, settings['system']['data_directory'])
+DATABASE_URL = f"sqlite:///{os.path.join(DATA_DIR, settings['system']['database_name'])}"
 
 # Ensure the data directory exists
 if not os.path.exists(DATA_DIR):

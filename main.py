@@ -5,7 +5,7 @@ from src.database import init_db
 from src.etl_engine import run_etl
 from src.analytics import load_data_from_db, calculate_metrics
 from src.visualizer import plot_metrics
-from src.config_loader import sync_assets_from_config
+from src.config_loader import sync_assets_from_config, settings
 
 def check_env_file():
     """Validates that the .env file exists and contains a real key."""
@@ -30,7 +30,9 @@ def analyze_and_plot(ticker: str):
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--api":
         print("--- Lanzando Servidor API ---")
-        uvicorn.run("src.api:app", host="127.0.0.1", port=8000, reload=True)  
+        host = settings['api']['host']
+        port = settings['api']['port']
+        uvicorn.run("src.api:app", host=host, port=port, reload=True)
     
     else:
         # 1. System Setup

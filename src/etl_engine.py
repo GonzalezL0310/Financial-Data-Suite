@@ -1,4 +1,5 @@
 import time
+from .config_loader import settings
 from datetime import datetime
 from .api_client import AlphaVantageClient
 from .database import get_session, Asset, DailyPrice
@@ -12,7 +13,9 @@ def run_etl(ticker_list=None):
     """
     session = get_session()
     client = AlphaVantageClient()
-    
+    cooldown = settings['etl']['api_cooldown_seconds']
+    out_size = settings['etl']['output_size']
+
     if ticker_list:
         assets = session.query(Asset).filter(Asset.ticker_symbol.in_(ticker_list)).all()
     else:
@@ -27,7 +30,7 @@ def run_etl(ticker_list=None):
         print(f"Processing {asset.ticker_symbol}...")
         
         # FIX 1: Explicitly request 'full' to get more than 100 records
-        raw_data = client.get_daily_data(asset.ticker_symbol, outputsize="full")
+        raw_data = client.get_daily_data(asset.ticker_symbol, outputsize=out_size)
         
         # FIX 2: Enhanced Error Diagnosis & Flow Control
         if not raw_data or "Time Series (Daily)" not in raw_data:
@@ -39,8 +42,8 @@ def run_etl(ticker_list=None):
             print(f"Skipping {asset.ticker_symbol}: {error_reason}")
             
             if raw_data and "Note" in raw_data:
-                print("Rate limit reached. Safety cooldown of 15s...")
-                time.sleep(15)
+                print("Rate limit reached. Safety cooldown of",cooldown,"s...")
+                time.sleep(cooldown)
             
             continue
             
@@ -73,7 +76,7 @@ def run_etl(ticker_list=None):
         print(f"Finished updating {asset.ticker_symbol}. Added {new_records_count} new records.")
 
         # Standard Cooldown
-        print("Waiting 15 seconds for API cooldown...")
-        time.sleep(15)
+        print("Waiting",cooldown,"seconds for API cooldown...")
+        time.sleep(cooldown)
     
     session.close()

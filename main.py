@@ -1,4 +1,6 @@
 import os
+import sys
+import uvicorn
 from src.database import init_db
 from src.etl_engine import run_etl
 from src.analytics import load_data_from_db, calculate_metrics
@@ -26,21 +28,24 @@ def analyze_and_plot(ticker: str):
         print(f"Warning: No data for {ticker} found in database. Run ETL first.")
 
 if __name__ == "__main__":
-    # 1. System Setup
-    init_db()
+    if len(sys.argv) > 1 and sys.argv[1] == "--api":
+        print("--- Lanzando Servidor API ---")
+        uvicorn.run("src.api:app", host="127.0.0.1", port=8000, reload=True)  
     
-    # 2. Sync DB with Tickers Config File
-    print("--- Phase 0: Syncing Configuration ---")
-    active_tickers = sync_assets_from_config("tickers.txt")
+    else:
+        # 1. System Setup
+        init_db()
     
-    if check_env_file() and active_tickers:
-        # 3. Global Sync (Project 2 logic)
-        print("\n--- Phase 1: Global Data Synchronization ---")
-        run_etl(ticker_list=active_tickers)
+        # 2. Sync DB with Tickers Config File
+        print("--- Phase 0: Syncing Configuration ---")
+        active_tickers = sync_assets_from_config("tickers.txt")
+    
+        if check_env_file() and active_tickers:
+            print("\n--- Phase 1: Global Data Synchronization ---")
+            run_etl(ticker_list=active_tickers)
         
-        # 4. Quantitative Analysis (Project 1 logic)
-        print("\n--- Phase 2: Quantitative Analysis ---")
-        for t in active_tickers:
-            analyze_and_plot(t)
+            print("\n--- Phase 2: Quantitative Analysis ---")
+            for t in active_tickers:
+                analyze_and_plot(t)
     
-    print("\n--- All operations completed ---")
+        print("\n--- All operations completed ---")

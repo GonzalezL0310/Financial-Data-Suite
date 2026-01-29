@@ -36,7 +36,7 @@ if __name__ == "__main__":
     if check_env_file() and active_tickers:
         # 3. Global Sync (Project 2 logic)
         print("\n--- Phase 1: Global Data Synchronization ---")
-        run_etl()
+        run_etl(ticker_list=active_tickers)
         
         # 4. Quantitative Analysis (Project 1 logic)
         print("\n--- Phase 2: Quantitative Analysis ---")

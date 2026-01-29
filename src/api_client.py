@@ -32,15 +32,8 @@ class AlphaVantageClient:
         try:
             response = requests.get(self.BASE_URL, params=params)
             response.raise_for_status()
-            data = response.json()
+            return response.json()
 
-            # Basic error handling for Alpha Vantage specific messages
-            if "Error Message" in data:
-                raise ValueError(f"Invalid symbol: {symbol}")
-            if "Note" in data:
-                raise Exception("API rate limit reached.")
-
-            return data
         except requests.exceptions.RequestException as e:
             print(f"Network error: {e}")
             return None

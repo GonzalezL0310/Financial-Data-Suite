@@ -3,19 +3,21 @@ from datetime import datetime
 from .api_client import AlphaVantageClient
 from .database import get_session, Asset, DailyPrice
 
-def run_etl():
+def run_etl(ticker_list=None):
     """
     Core ETL process:
     1. Extract tickers from 'asset' table.
-    2. Fetch latest data via API with a safety delay to avoid rate limits.
+    2. Fetch LATEST FULL data via API with safety delays.
     3. Load data into 'daily_price', avoiding duplicates.
     """
     session = get_session()
     client = AlphaVantageClient()
     
-    # 1. Extract: Get all tracked assets
-    assets = session.query(Asset).all()
-    
+    if ticker_list:
+        assets = session.query(Asset).filter(Asset.ticker_symbol.in_(ticker_list)).all()
+    else:
+        assets = session.query(Asset).all()
+
     if not assets:
         print("No assets found in the database. Please add some first.")
         session.close()
@@ -23,19 +25,25 @@ def run_etl():
 
     for asset in assets:
         print(f"Processing {asset.ticker_symbol}...")
-        raw_data = client.get_daily_data(asset.ticker_symbol)
         
-        # Enhanced Error Diagnosis
+        # FIX 1: Explicitly request 'full' to get more than 100 records
+        raw_data = client.get_daily_data(asset.ticker_symbol, outputsize="full")
+        
+        # FIX 2: Enhanced Error Diagnosis & Flow Control
         if not raw_data or "Time Series (Daily)" not in raw_data:
-            # Captures specific API messages (e.g., rate limit notes or invalid symbols)
-            error_reason = raw_data.get("Note") or raw_data.get("Error Message") if raw_data else "Unknown error"
+            # Captures specific API messages or provides a fallback string
+            error_reason = "Unknown API response format"
+            if raw_data:
+                error_reason = raw_data.get("Note") or raw_data.get("Error Message") or raw_data.get("Information") or "Data key missing"
             
             print(f"Skipping {asset.ticker_symbol}: {error_reason}")
             
             if raw_data and "Note" in raw_data:
                 print("Rate limit reached. Safety cooldown of 15s...")
                 time.sleep(15)
-        
+            
+            continue
+            
         time_series = raw_data["Time Series (Daily)"]
         
         # 3. Load: Save new records
@@ -43,7 +51,7 @@ def run_etl():
         for date_str, values in time_series.items():
             date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
             
-            # Check if record already exists to maintain data integrity
+            # Check if record already exists
             exists = session.query(DailyPrice).filter_by(
                 asset_id=asset.id, date=date_obj
             ).first()
@@ -64,8 +72,7 @@ def run_etl():
         session.commit()
         print(f"Finished updating {asset.ticker_symbol}. Added {new_records_count} new records.")
 
-        # Cooldown: Sleep for 15 seconds to respect Alpha Vantage free tier limits
-        # (5 requests per minute / 60 seconds = 1 request every 12 seconds)
+        # Standard Cooldown
         print("Waiting 15 seconds for API cooldown...")
         time.sleep(15)
     

@@ -51,11 +51,13 @@ def calculate_metrics(df: pd.DataFrame):
     rsi_p = settings['analytics']['rsi_period']
     bb_p = settings['analytics']['bollinger_period']
     bb_std = settings['analytics']['bollinger_std']
+    vol_w = settings['analytics']['volatility_window']
 
     # Vectorización pura: Pandas opera sobre toda la columna a la vez
     df['returns'] = df['close'].pct_change()
     df['sma_short'] = df['close'].rolling(window=s_p).mean()
     df['sma_long'] = df['close'].rolling(window=l_p).mean()
+    df['volatility'] = df['returns'].rolling(window=vol_w).std()
 
     # RSI Vectorizado con EWMA (Más rápido y preciso)
     delta = df['close'].diff()
